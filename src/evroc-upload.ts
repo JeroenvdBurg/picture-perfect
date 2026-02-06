@@ -1,53 +1,58 @@
-// Upload file to server API endpoint (server forwards to evroc)
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getEvroc Config } from './runtime-config';
+
+const config = getEvrocConfig();
+
+// Initialize S3 client for browser
+const s3Client = new S3Client({
+  endpoint: config.endpoint,
+  region: config.region,
+  credentials: {
+    accessKeyId: config.accessKey,
+    secretAccessKey: config.secretKey,
+  },
+  forcePathStyle: true,
+});
+
+// Upload file directly to S3 from browser
 export const uploadFileToEvroc = async (
   file: File,
   onProgress?: (progress: number) => void
 ): Promise<string> => {
   console.log(`[Upload] Starting upload for: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
   
-  return new Promise((resolve, reject) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const xhr = new XMLHttpRequest();
-
-    // Track upload progress
-    xhr.upload.addEventListener('progress', (e) => {
-      if (e.lengthComputable && onProgress) {
-        const progress = Math.round((e.loaded / e.total) * 100);
-        console.log(`[Upload] Progress for ${file.name}: ${progress}% (${(e.loaded / 1024 / 1024).toFixed(2)} / ${(e.total / 1024 / 1024).toFixed(2)} MB)`);
-        onProgress(progress);
+  const fileKey = `uploads/${Date.now()}-${file.name}`;
+  
+  try {
+    // Convert file to ArrayBuffer for upload
+    const arrayBuffer = await file.arrayBuffer();
+    
+    // Simulate progress since S3 SDK doesn't provide native progress for browser
+    const progressInterval = setInterval(() => {
+      if (onProgress) {
+        // Simulate progress - this is a workaround since PutObjectCommand doesn't expose progress
+        const fakeProgress = Math.floor(Math.random() * 30) + 50;
+        onProgress(Math.min(fakeProgress, 95));
       }
+    }, 200);
+    
+    const command = new PutObjectCommand({
+      Bucket: config.bucket,
+      Key: fileKey,
+      Body: new Uint8Array(arrayBuffer),
+      ContentType: file.type,
+      ACL: 'public-read', // Make images publicly readable
     });
-
-    xhr.addEventListener('load', () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          console.log(`[Upload] ✅ Success: ${file.name} -> ${data.fileKey}`);
-          resolve(data.fileKey);
-        } catch (error) {
-          console.error(`[Upload] ❌ Invalid response for ${file.name}:`, error);
-          reject(new Error('Invalid response from server'));
-        }
-      } else {
-        try {
-          const error = JSON.parse(xhr.responseText);
-          console.error(`[Upload] ❌ Failed: ${file.name} - ${error.message || 'Unknown error'}`);
-          reject(new Error(error.message || 'Upload failed'));
-        } catch {
-          console.error(`[Upload] ❌ Failed: ${file.name} - Status ${xhr.status}`);
-          reject(new Error(`Upload failed with status ${xhr.status}`));
-        }
-      }
-    });
-
-    xhr.addEventListener('error', () => {
-      console.error(`[Upload] ❌ Network error for ${file.name}`);
-      reject(new Error('Network error during upload'));
-    });
-
-    xhr.open('POST', '/api/upload');
-    xhr.send(formData);
-  });
+    
+    await s3Client.send(command);
+    
+    clearInterval(progressInterval);
+    if (onProgress) onProgress(100);
+    
+    console.log(`[Upload] ✅ Success: ${file.name} -> ${fileKey}`);
+    return fileKey;
+  } catch (error) {
+    console.error(`[Upload] ❌ Failed: ${file.name}`, error);
+    throw new Error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 };

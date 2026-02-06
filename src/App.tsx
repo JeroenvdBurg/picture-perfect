@@ -1,7 +1,22 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
+import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { uploadFileToEvroc } from "./evroc-upload";
+import { getEvrocConfig } from "./runtime-config";
 import "./App.css";
+
+const config = getEvrocConfig();
+
+// Initialize S3 client for browser
+const s3Client = new S3Client({
+  endpoint: config.endpoint,
+  region: config.region,
+  credentials: {
+    accessKeyId: config.accessKey,
+    secretAccessKey: config.secretKey,
+  },
+  forcePathStyle: true,
+});
 
 interface UploadProgress {
   fileName: string;
@@ -95,13 +110,25 @@ const App: React.FC = () => {
     setLoadingFiles(true);
     console.log('[App] 📂 Loading files from bucket');
     try {
-      const response = await fetch('/api/files');
-      if (!response.ok) throw new Error('Failed to load files');
-      const data = await response.json();
-      setFiles(data.files);
-      console.log(`[App] ✅ Loaded ${data.files.length} file(s)`);
+      const command = new ListObjectsV2Command({
+        Bucket: config.bucket,
+        Prefix: 'uploads/',
+      });
+      
+      const response = await s3Client.send(command);
+      
+      const fileList: BucketFile[] = (response.Contents || []).map(item => ({
+        key: item.Key!,
+        size: item.Size!,
+        lastModified: item.LastModified!.toISOString(),
+        url: `${config.endpoint}${config.bucket}/${item.Key}`,
+      }));
+      
+      setFiles(fileList);
+      console.log(`[App] ✅ Loaded ${fileList.length} file(s)`);
     } catch (error) {
       console.error('[App] ❌ Error loading files:', error);
+      setFiles([]);
     } finally {
       setLoadingFiles(false);
     }

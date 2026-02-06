@@ -1,58 +1,25 @@
-apiVersion: run.evroc.io/v1
-kind: Service
-metadata:
-  name: pictureperfect
-  labels:
-    app: pictureperfect
-    environment: production
-spec:
-  image: registry.prod.evroclabs.net/31a06229-dbf5-4ae0-83c5-b209a90587ae/pictureperfect:latest
-  
-  # Resource allocation
-  resources:
-    cpu: 1000m      # 1 CPU core
-    memory: 512Mi   # 512 MB RAM
-  
-  # Scaling configuration
-  replicas:
-    min: 1
-    max: 3
-  
-  # Port configuration
-  ports:
-    - port: 8080
-      protocol: HTTP
-  
-  # Environment variables - evroc storage credentials
-  env:
-    - name: PORT
-      value: "8080"
-    - name: VITE_EVROC_ENDPOINT
-      value: "https://storage.services.evroc.cloud/"
-    - name: VITE_EVROC_REGION
-      value: "sto-1"
-    - name: VITE_EVROC_BUCKET
-      value: "my-bucket"
-    - name: VITE_EVROC_ACCESS_KEY
-      value: "7N5KDVEX5G4VPOK73YQW"
-    - name: VITE_EVROC_SECRET_KEY
-      value: "KFMUTGIFMBBFK2JYDEQJ4K4OOLN75JSEYQDO2GWR"
-  
-  # Health check configuration
-  healthCheck:
-    path: /health
-    port: 8080
-    initialDelaySeconds: 10
-    periodSeconds: 30
-    timeoutSeconds: 3
-    successThreshold: 1
-    failureThreshold: 3
-  
-  # Security - runs as non-root user (UID 1001)
-  securityContext:
-    runAsUser: 1001
-    runAsGroup: 1001
-    runAsNonRoot: true
-  
-  # Auto-restart on failure
-  restartPolicy: Always
+name: pictureperfect
+image: registry.prod.evroclabs.net/31a06229-dbf5-4ae0-83c5-b209a90587ae/pictureperfect:latest
+
+# Resource allocation
+cpu: 1000m
+memory: 512Mi
+
+# Scaling
+minReplicas: 1
+maxReplicas: 3
+
+# Port
+port: 8080
+
+# Environment variables
+env:
+  PORT: "8080"
+  VITE_EVROC_ENDPOINT: "https://storage.services.evroc.cloud/"
+  VITE_EVROC_REGION: "sto-1"
+  VITE_EVROC_BUCKET: "my-bucket"
+  VITE_EVROC_ACCESS_KEY: "7N5KDVEX5G4VPOK73YQW"
+  VITE_EVROC_SECRET_KEY: "KFMUTGIFMBBFK2JYDEQJ4K4OOLN75JSEYQDO2GWR"
+
+# Health check
+healthCheckPath: /health
