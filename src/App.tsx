@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { uploadFileToEvroc } from "./evroc-upload";
 import { getEvrocConfig } from "./runtime-config";
 import "./App.css";
@@ -117,12 +118,24 @@ const App: React.FC = () => {
       
       const response = await s3Client.send(command);
       
-      const fileList: BucketFile[] = (response.Contents || []).map(item => ({
-        key: item.Key!,
-        size: item.Size!,
-        lastModified: item.LastModified!.toISOString(),
-        url: `${config.endpoint}${config.bucket}/${item.Key}`,
-      }));
+      // Generate pre-signed URLs for each file (valid for 1 hour)
+      const fileList: BucketFile[] = await Promise.all(
+        (response.Contents || []).map(async (item) => {
+          const getCommand = new GetObjectCommand({
+            Bucket: config.bucket,
+            Key: item.Key!,
+          });
+          
+          const signedUrl = await getSignedUrl(s3Client, getCommand, { expiresIn: 3600 });
+          
+          return {
+            key: item.Key!,
+            size: item.Size!,
+            lastModified: item.LastModified!.toISOString(),
+            url: signedUrl,
+          };
+        })
+      );
       
       setFiles(fileList);
       console.log(`[App] ✅ Loaded ${fileList.length} file(s)`);

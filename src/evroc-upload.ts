@@ -1,5 +1,5 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getEvroc Config } from './runtime-config';
+import { getEvrocConfig } from './runtime-config';
 
 const config = getEvrocConfig();
 
@@ -41,7 +41,6 @@ export const uploadFileToEvroc = async (
       Key: fileKey,
       Body: new Uint8Array(arrayBuffer),
       ContentType: file.type,
-      ACL: 'public-read', // Make images publicly readable
     });
     
     await s3Client.send(command);
