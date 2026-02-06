@@ -1,0 +1,9 @@
+node_modules
+.env.local
+.idea
+.vscode/
+
+yarn-error.log
+npm-error.log
+
+.DS_Store
