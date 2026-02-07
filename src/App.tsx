@@ -391,9 +391,7 @@ const App: React.FC = () => {
   );
 };
 
-
 function BlurItem({ file }: { file: BucketFile }) {
-
   const [visualizationImage, setVisualizationImage] = useState<string>("");
   const [blurImage, setBlurImage] = useState<string>("");
   const [isBlurring, setIsBlurring] = useState<boolean>(false);
@@ -401,26 +399,27 @@ function BlurItem({ file }: { file: BucketFile }) {
 
   const handleClickBlur = async () => {
     const segmentResponse = await postSegmentImage({
-      imageUrl: file.url,
+      imageUrl: window.location.origin + file.url,
       textPrompt: blurPrompt,
-    })
+    });
 
     console.log("segment response", segmentResponse);
     if (!segmentResponse.ok) {
       throw new Error(segmentResponse.error);
     }
 
-    const segmentData = segmentResponse.data as { visualization: string, maskData: string };
+    const segmentData = segmentResponse.data as {
+      visualization: string;
+      maskData: string;
+    };
     setVisualizationImage(segmentData.visualization);
 
-  
     const blurResponse = await postBlurImage({
-      imageUrl: file.url,
+      imageUrl: window.location.origin + file.url,
       maskData: segmentData.maskData,
-    })
+    });
 
     console.log("blur response", blurResponse);
-    
 
     if (!blurResponse.ok) {
       throw new Error(blurResponse.error);
@@ -428,32 +427,52 @@ function BlurItem({ file }: { file: BucketFile }) {
 
     const blurData = blurResponse.data as { image: string };
     setBlurImage(blurData.image);
-  }
+  };
 
   return (
-    <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
+    <div style={{ display: "flex", gap: "1rem", flexDirection: "column" }}>
       <div>
         <label htmlFor={`blurPrompt-${file.key}`}>Blur Prompt</label>
-        <input type="text" id={`blurPrompt-${file.key}`} value={blurPrompt} onChange={(e) => setBlurPrompt(e.target.value)} />
+        <input
+          type="text"
+          id={`blurPrompt-${file.key}`}
+          value={blurPrompt}
+          onChange={(e) => setBlurPrompt(e.target.value)}
+        />
       </div>
 
-      <button className="gallery-link" disabled={isBlurring || !blurPrompt} onClick={() => {
-        setIsBlurring(true);
-        handleClickBlur().finally(() => {
-          setIsBlurring(false);
-        });
-      }}>
+      <button
+        className="gallery-link"
+        disabled={isBlurring || !blurPrompt}
+        onClick={() => {
+          setIsBlurring(true);
+          handleClickBlur().finally(() => {
+            setIsBlurring(false);
+          });
+        }}
+      >
         🔄 Blur
       </button>
 
       {visualizationImage && (
         <div>
-          <p style={{ fontSize: '0.85rem', color: '#667eea', marginBottom: '0.5rem' }}>Segmentation</p>
-          <a href={visualizationImage} download={`segmentation-${file.key.split('/').pop()}`}>
-            <img 
-              src={visualizationImage} 
-              alt="Visualization" 
-              style={{ width: '100%', borderRadius: '8px', cursor: 'pointer' }}
+          <p
+            style={{
+              fontSize: "0.85rem",
+              color: "#667eea",
+              marginBottom: "0.5rem",
+            }}
+          >
+            Segmentation
+          </p>
+          <a
+            href={visualizationImage}
+            download={`segmentation-${file.key.split("/").pop()}`}
+          >
+            <img
+              src={visualizationImage}
+              alt="Visualization"
+              style={{ width: "100%", borderRadius: "8px", cursor: "pointer" }}
             />
           </a>
         </div>
@@ -461,18 +480,26 @@ function BlurItem({ file }: { file: BucketFile }) {
 
       {blurImage && (
         <div>
-          <p style={{ fontSize: '0.85rem', color: '#667eea', marginBottom: '0.5rem' }}>Blurred</p>
-          <a href={blurImage} download={`blurred-${file.key.split('/').pop()}`}>
-            <img 
-              src={blurImage} 
-              alt="Blurred" 
-              style={{ width: '100%', borderRadius: '8px', cursor: 'pointer' }}
+          <p
+            style={{
+              fontSize: "0.85rem",
+              color: "#667eea",
+              marginBottom: "0.5rem",
+            }}
+          >
+            Blurred
+          </p>
+          <a href={blurImage} download={`blurred-${file.key.split("/").pop()}`}>
+            <img
+              src={blurImage}
+              alt="Blurred"
+              style={{ width: "100%", borderRadius: "8px", cursor: "pointer" }}
             />
           </a>
         </div>
       )}
-    </div>)
-  ;
+    </div>
+  );
 }
 
 export default App;
