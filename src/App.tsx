@@ -433,13 +433,13 @@ function BlurItem({ file }: { file: BucketFile }) {
     <div style={{ display: "flex", gap: "1rem", flexDirection: "column" }}>
       <div className="radio-group">
         <label
-          className={`radio-label ${blurPrompt === "face" ? "active" : ""}`}
+          className={`radio-label ${blurPrompt === "faces" ? "active" : ""}`}
         >
           <input
             type="radio"
             name={`blurOption-${file.key}`}
             value="face"
-            checked={blurPrompt === "face"}
+            checked={blurPrompt === "faces"}
             onChange={() => setBlurPrompt("faces")}
             className="radio-input"
           />
@@ -452,7 +452,7 @@ function BlurItem({ file }: { file: BucketFile }) {
             type="radio"
             name={`blurOption-${file.key}`}
             value="object"
-            checked={blurPrompt !== "face" && blurPrompt !== ""}
+            checked={blurPrompt === "objects"}
             onChange={() => setBlurPrompt("objects")}
             className="radio-input"
           />
