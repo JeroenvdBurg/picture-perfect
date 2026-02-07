@@ -1,0 +1,55 @@
+# Scaleway Serverless Container Configuration
+# This file documents the container settings for Scaleway deployment
+# Deploy using: scw container container deploy (see deploy.ps1)
+
+name: pictureperfect
+namespace_id: funcscwnssuspiciousmurdock2ee4sodu
+region: nl-ams
+
+# Container Image
+registry_image: rg.nl-ams.scw.cloud/funcscwnssuspiciousmurdock2ee4sodu/pictureperfect:latest
+
+# Resource allocation
+resources:
+  cpu_limit: 1000 # 1000 mVCPU (1 vCPU)
+  memory_limit: 512 # 512 MB RAM
+
+# Scaling configuration
+scaling:
+  min_scale: 0 # Scale to zero when idle
+  max_scale: 3 # Maximum 3 instances
+
+# Port configuration
+port: 8080
+protocol: http1
+
+# Environment variables - Scaleway Object Storage credentials
+# Update these with your actual Scaleway credentials
+environment:
+  PORT: "8080"
+  VITE_S3_ENDPOINT: "https://s3.nl-ams.scw.cloud"
+  VITE_S3_REGION: "nl-ams"
+  VITE_S3_BUCKET: "pictureperfect-uploads"
+  VITE_S3_ACCESS_KEY: "SCWXXXXXXXXXXXXXXXXXXX" # Replace with your Scaleway access key
+  VITE_S3_SECRET_KEY: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" # Replace with your Scaleway secret key
+
+# Health check configuration
+health_check:
+  path: /health
+  port: 8080
+  initial_delay_seconds: 10
+  period_seconds: 30
+  timeout_seconds: 3
+  failure_threshold: 3
+
+# Deploy this container with the Scaleway CLI:
+# scw container container deploy \
+#   namespace-id=funcscwnssuspiciousmurdock2ee4sodu \
+#   region=nl-ams \
+#   name=pictureperfect \
+#   registry-image=rg.nl-ams.scw.cloud/funcscwnssuspiciousmurdock2ee4sodu/pictureperfect:latest \
+#   port=8080 \
+#   cpu-limit=1000 \
+#   memory-limit=512 \
+#   min-scale=0 \
+#   max-scale=3

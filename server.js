@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { S3Client, PutObjectCommand, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, ListObjectsV2Command, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -161,6 +161,47 @@ app.get('/api/proxy/:bucket/:key(*)', async (req, res) => {
     const statusCode = error.name === 'NoSuchKey' ? 404 : 500;
     const errorMessage = error.name === 'NoSuchKey' ? 'File not found' : 'Server error';
     res.status(statusCode).json({ error: errorMessage, message: error.message, name: error.name });
+  }
+});
+
+// Delete endpoint - handles file deletion from evroc
+app.delete('/api/files/:key(*)', async (req, res) => {
+  const startTime = Date.now();
+  
+  try {
+    if (!s3Client) {
+      console.error('[Server] ❌ S3 client not initialized');
+      return res.status(500).json({ error: 'S3 client not initialized' });
+    }
+    
+    const fileKey = req.params.key;
+    const bucketName = EVROC_CONFIG.bucket;
+    
+    console.log(`[Server] 🗑️ Deleting from evroc: ${bucketName}/${fileKey}`);
+
+    const command = new DeleteObjectCommand({
+      Bucket: bucketName,
+      Key: fileKey,
+    });
+
+    console.log(`[Server] 🔄 Sending DeleteObjectCommand...`);
+    await s3Client.send(command);
+    console.log(`[Server] 📦 Delete command completed`);
+    
+    const duration = Date.now() - startTime;
+    console.log(`[Server] ✅ Delete successful: ${fileKey} in ${duration}ms`);
+
+    res.json({ 
+      success: true, 
+      fileKey
+    });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`[Server] ❌ Delete failed after ${duration}ms:`, error.message);
+    console.error('[Server] Error name:', error.name);
+    console.error('[Server] Error code:', error.code);
+    console.error('[Server] Error stack:', error.stack);
+    res.status(500).json({ error: 'Delete failed', message: error.message, name: error.name, code: error.code });
   }
 });
 
