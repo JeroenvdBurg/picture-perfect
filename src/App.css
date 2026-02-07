@@ -24,8 +24,13 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .logo-text {
@@ -66,13 +71,17 @@
 }
 
 .dropzone::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.1) 0%,
+    rgba(118, 75, 162, 0.1) 100%
+  );
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -217,7 +226,7 @@
 }
 
 .progress-bar-fill::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -233,8 +242,12 @@
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .progress-bar-fill.uploading {
@@ -370,8 +383,15 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
 }
 
 .state-message p {
@@ -431,10 +451,10 @@
 }
 
 .gallery-image-container::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.05));
+  background: linear-gradient(to bottom, transparent 60%, rgba(0, 0, 0, 0.05));
 }
 
 .gallery-image {
@@ -660,5 +680,65 @@
 
   .toast {
     min-width: 0;
+  }
+}
+
+.radio-group {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+}
+
+.radio-label {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  color: #4a5568;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.radio-label:hover {
+  background: #edf2f7;
+  color: #2d3748;
+}
+
+.radio-label.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.25);
+}
+
+.radio-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.radio-label:has(.radio-input:focus-visible) {
+  outline: 2px solid rgba(102, 126, 234, 0.6);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .radio-group {
+    gap: 0.5rem;
+  }
+
+  .radio-label {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.9rem;
   }
 }
