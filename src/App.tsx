@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { uploadFileToEvroc } from "./evroc-upload";
 import "./App.css";
+import { postBlurImage, postSegmentImage } from "./lib/image_ai";
 
 interface UploadProgress {
   fileName: string;
@@ -333,6 +334,7 @@ const App: React.FC = () => {
                       🗑️ Delete
                     </button>
                   </div>
+                  <BlurItem file={file} />
                 </div>
               ))}
             </div>
@@ -388,5 +390,89 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+
+function BlurItem({ file }: { file: BucketFile }) {
+
+  const [visualizationImage, setVisualizationImage] = useState<string>("");
+  const [blurImage, setBlurImage] = useState<string>("");
+  const [isBlurring, setIsBlurring] = useState<boolean>(false);
+  const [blurPrompt, setBlurPrompt] = useState<string>("");
+
+  const handleClickBlur = async () => {
+    const segmentResponse = await postSegmentImage({
+      imageUrl: file.url,
+      textPrompt: blurPrompt,
+    })
+
+    console.log("segment response", segmentResponse);
+    if (!segmentResponse.ok) {
+      throw new Error(segmentResponse.error);
+    }
+
+    const segmentData = segmentResponse.data as { visualization: string, maskData: string };
+    setVisualizationImage(segmentData.visualization);
+
+  
+    const blurResponse = await postBlurImage({
+      imageUrl: file.url,
+      maskData: segmentData.maskData,
+    })
+
+    console.log("blur response", blurResponse);
+    
+
+    if (!blurResponse.ok) {
+      throw new Error(blurResponse.error);
+    }
+
+    const blurData = blurResponse.data as { image: string };
+    setBlurImage(blurData.image);
+  }
+
+  return (
+    <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
+      <div>
+        <label htmlFor={`blurPrompt-${file.key}`}>Blur Prompt</label>
+        <input type="text" id={`blurPrompt-${file.key}`} value={blurPrompt} onChange={(e) => setBlurPrompt(e.target.value)} />
+      </div>
+
+      <button className="gallery-link" disabled={isBlurring || !blurPrompt} onClick={() => {
+        setIsBlurring(true);
+        handleClickBlur().finally(() => {
+          setIsBlurring(false);
+        });
+      }}>
+        🔄 Blur
+      </button>
+
+      {visualizationImage && (
+        <div>
+          <p style={{ fontSize: '0.85rem', color: '#667eea', marginBottom: '0.5rem' }}>Segmentation</p>
+          <a href={visualizationImage} download={`segmentation-${file.key.split('/').pop()}`}>
+            <img 
+              src={visualizationImage} 
+              alt="Visualization" 
+              style={{ width: '100%', borderRadius: '8px', cursor: 'pointer' }}
+            />
+          </a>
+        </div>
+      )}
+
+      {blurImage && (
+        <div>
+          <p style={{ fontSize: '0.85rem', color: '#667eea', marginBottom: '0.5rem' }}>Blurred</p>
+          <a href={blurImage} download={`blurred-${file.key.split('/').pop()}`}>
+            <img 
+              src={blurImage} 
+              alt="Blurred" 
+              style={{ width: '100%', borderRadius: '8px', cursor: 'pointer' }}
+            />
+          </a>
+        </div>
+      )}
+    </div>)
+  ;
+}
 
 export default App;

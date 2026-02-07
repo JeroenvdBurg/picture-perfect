@@ -4,6 +4,12 @@ FROM node:20-alpine AS build
 # Set working directory
 WORKDIR /app
 
+# evroc
+#ENV VITE_IMAGE_AI_BACKEND_URL=http://185.222.60.164
+
+# hetzner
+ENV VITE_IMAGE_AI_BACKEND_URL=http://49.13.15.201
+
 ENV VITE_EVROC_ENDPOINT=https://storage.services.evroc.cloud/
 ENV VITE_EVROC_REGION=sto-1
 ENV VITE_EVROC_ACCESS_KEY=7N5KDVEX5G4VPOK73YQW
